@@ -1,0 +1,33 @@
+Hello Florian,
+
+To summarize our approach, it consists of a PPO with communication between agents and various approaches to launching agents to the map.
+
+We use modified TreeObservation as an observation that agents receive. Agents receive reward for reaching the target, small reward for getting closer to target and negative reward for obvious deadlock.
+Main difference from classic Independent PPO is communication between agents. Every step Agent generates message(float vector) using neural network. Then Agent receives messages from all neighbours agents, which are considered to be the first agents on edges of TreeObservation. PPO Actor network conditions on these messages, combining them with the attention mechanism. PPO Actor network and Messages network share several few layers.
+During training rollouts sampled from several environments running in parallell. Then parameters are optimized in the main process.
+Most of the training was done in environment called "PackOfAgents" in code, although it is possible to run on a sequence of environments.
+
+
+Now I will tell you more details about the code. Branches of any interest are "agent-thoughts-3", "judge-sender" and "linear-judge". They should differ mainly in the way the agents are sent to the enironment.
+train.py starts training
+Directory agent/PPO contains PPO implementation.
+Directory networks/ contains neural networks definitions. Some submissions used Recursive layer for feature retrieval.
+Code in env/rewards and env/observations is for reward shaping and observation building
+We use action skipping and it is implemented with env/GreedyFlatland.py wrapper and env/GreedyChecker.py
+Simple deadlocks are detected by env/DeadlockChecker.py
+env/Flatland.py contains an env wrapper with some utility code
+env/Contradictions.py forbids agents to do actions that lead to inevitable simple deadlock with one other agent. Such actions are replaced with STOP action. Using it seems to degrade learning, yet gives a few points on evaluation.
+
+In "judge" branches there is also an "agent/judge" directory.
+It contains code for defining order of launching agents to map.
+Judge in "judge-sender" directory tries to predict probability for agent to reach the target and launches agent if it is big enough.
+Judge in "linear-judge" launches fixed sized window of agents in order defined by simple global features, combined linearly
+The results of those judges are roughly the same.
+
+Other files contain mainly unimportant or unused code.
+Our RL model processes observations in tricky way, we don't really understand. Most probably it can't be replaced with a simple function.
+
+An MIT License is fine. Feel free to contact me for any details about our solution.
+
+Best regards,
+Konstantin

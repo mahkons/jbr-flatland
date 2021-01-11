@@ -1,0 +1,8 @@
+{
+  "challenge_id": "neurips-2020-flatland-challenge",
+  "grader_id": "neurips-2020-flatland-challenge",
+  "description" : "NeurIPS 2020: Flatland Challenge Agent",
+  "authors" : ["mahkons", "vladimirrim", "oleg_svidchenko"],
+  "debug": false,
+  "tags": ["RL"]
+}
