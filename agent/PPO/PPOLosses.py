@@ -6,6 +6,7 @@ def value_loss(state_values, next_state_values, reward, done, gamma, actual_len)
     return F.mse_loss(state_values, expected_state_values)
 
 def value_loss_with_IS(state_values, next_state_values, new_log_prob, old_log_prob, reward, done, gamma, actual_len):
+    # TODO update to V-trace version
     expected_state_values = (next_state_values * torch.pow(gamma, actual_len.float()) * (1 - done)) + reward
     with torch.no_grad():
         truncated_ratio_log = torch.clamp(new_log_prob - old_log_prob, max=0)
