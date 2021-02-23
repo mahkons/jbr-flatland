@@ -22,8 +22,6 @@ class PPOLearner():
         self.judge = Judge(None, device)
         self.device = device
 
-        self.controller.load_controller("logdir/MoreNeighbours/controller.torch")
-
         num_gpus = 0
         if device == torch.device("cuda"):
             num_gpus = 1

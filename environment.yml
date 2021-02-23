@@ -11,3 +11,5 @@ dependencies:
   - pip:
       - tensorboard==2.3.0
       - tensorboardx==2.1
+      - flatland-rl==2.2.2
+      - ray==1.2.0

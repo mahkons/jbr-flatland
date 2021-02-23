@@ -2,7 +2,7 @@ from collections import namedtuple
 import math
 import copy
 
-from configs import ActorCriticConfig, ReplayMemoryConfig, AdamConfig, DQNConfig, PPOConfig, \
+from configs import AdamConfig, PPOConfig, \
         FlatlandConfig, SimpleObservationConfig, SimpleRewardConfig, SparseRewardConfig
 
 
@@ -23,50 +23,6 @@ def PPOParams():
         actor_layers_sz=[256, 128],
         critic_layers_sz=[256, 128],
     )
-
-def DQNConfigParams():
-    return DQNConfig(
-        memory_config = ReplayMemoryConfig(200000),
-        optimizer_config = AdamConfig(1e-3),
-        batch_size = 64,
-        gamma = 0.99,
-        eps_start = 0.9,
-        eps_end = 0.05,
-        eps_decay = 20000,
-        target_net_update_steps = 2500,
-        layers_sz = [256, 128],
-    )
-
-
-# env configs
-
-def FewAgents(random_seed):
-    return FlatlandConfig(
-    )
-
-def ActorCriticParams():
-    return ActorCriticConfig(
-        actor_optimizer_config = AdamConfig(lr=2e-4),
-        critic_optimizer_config = AdamConfig(lr=2e-4),
-        gamma=0.99,
-        entropy_coeff=2,
-        actor_layers_sz=[256, 128],
-        critic_layers_sz=[256, 128],
-    )
-
-def DQNConfigParams():
-    return DQNConfig(
-        memory_config = ReplayMemoryConfig(200000),
-        optimizer_config = AdamConfig(1e-3),
-        batch_size = 64,
-        gamma = 0.99,
-        eps_start = 0.9,
-        eps_end = 0.05,
-        eps_decay = 20000,
-        target_net_update_steps = 2500,
-        layers_sz = [256, 128],
-    )
-
 
 # env configs
 
