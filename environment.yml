@@ -9,6 +9,7 @@ dependencies:
   - pip==20.2.3
   - python==3.6.8
   - pip:
+      - msgpack==0.6.2
       - tensorboard==2.3.0
       - tensorboardx==2.1
       - flatland-rl==2.2.2

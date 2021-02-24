@@ -6,7 +6,7 @@ do
             redis-cli shutdown
             rm -rf dump.rdb
         ;;
-        "small"|"medium"|"big"|"tiny"|"2")
+        "small"|"medium"|"big"|"tiny"|"2"|"3"|"4")
             testdir="./scratch/test-envs-$arg"
             echo "$testdir"
         ;;

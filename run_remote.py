@@ -9,14 +9,10 @@ from logger import log, init_logger
 
 from env.Flatland import Flatland, FlatlandWrapper
 from env.rewards.FakeRewardShaper import FakeRewardShaper
-from env.GreedyFlatland import GreedyFlatland
 from env.DeadlockChecker import DeadlockChecker
 from env.GreedyChecker import GreedyChecker
-from env.timetables import AllAgentLauncher, ShortestPathAgentLauncher, NetworkLoadAgentLauncher
-from env.timetables.ShortestPathAgentLauncher import ConstWindowSizeGenerator, \
-    LinearOnAgentNumberSizeGenerator
-from env.observations import ShortPathObs, SimpleObservation
-from agent.controllers.ActorCritic import ActorCritic
+from agent.judge.Judge import ConstWindowSizeGenerator, LinearOnAgentNumberSizeGenerator
+from env.observations import SimpleObservation
 from agent.PPO.PPOController import PPOController
 from agent.judge.Judge import Judge
 

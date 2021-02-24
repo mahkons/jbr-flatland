@@ -1,30 +1,22 @@
 import torch
 import numpy as np
-import os
-from time import time
 import random
-import torch.multiprocessing as mp
 
-from flatland.core.env_observation_builder import DummyObservationBuilder
-from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv
-from env.observations import SimpleObservation, ShortPathObs
+from env.observations import SimpleObservation
 
 from agent.PPO.PPOLearner import PPOLearner
 
 from configs import Experiment, AdamConfig, FlatlandConfig, \
-    SimpleObservationConfig, ShortPathObsConfig, CartPoleConfig, LunarLanderConfig, EnvCurriculumConfig, \
+    SimpleObservationConfig, EnvCurriculumConfig, \
     EnvCurriculumSampleConfig, SimpleRewardConfig, SparseRewardConfig, NearRewardConfig, \
     DeadlockPunishmentConfig,  RewardsComposerConfig, \
     NotStopShaperConfig, FinishRewardConfig, JudgeConfig
 from env.Flatland import Flatland
-from env.CartPole import CartPole, MultiCartPole
-from env.LunarLander import MultiLunarLander
 from agent.judge.Judge import ConstWindowSizeGenerator, LinearOnAgentNumberSizeGenerator
 from logger import log, init_logger
 
 from params import PPOParams
-from params import env6, env7, env8, env9, env10, env11, env12, env13
-from params import test_env
+from params import test_env, PackOfAgents
 
 def init_random_seeds(RANDOM_SEED, cuda_determenistic):
     torch.manual_seed(RANDOM_SEED)
@@ -33,11 +25,11 @@ def init_random_seeds(RANDOM_SEED, cuda_determenistic):
     random.seed(RANDOM_SEED)
 
     if cuda_determenistic:
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = cuda_determenistic
+        torch.backends.cudnn.benchmark = cuda_determenistic
 
 def train_ppo(exp, n_workers):
-    init_random_seeds(exp.random_seed, cuda_determenistic=False) # determenistic is slow
+    init_random_seeds(exp.random_seed, cuda_determenistic=False)
     log().update_params(exp)
 
     learner = PPOLearner(exp.env_config, exp.controller_config, n_workers, exp.device)
@@ -59,7 +51,7 @@ if __name__ == "__main__":
         DeadlockPunishmentConfig(value=-5),
         NotStopShaperConfig(on_switch_value=0, other_value=0),
     ))
-    envs = [(test_env(RANDOM_SEED, i), 1) for i in [5]]
+    envs = [(PackOfAgents(RANDOM_SEED), 1)]
 
     workers = 1
     exp = Experiment(
