@@ -8,7 +8,7 @@ from configs import AdamConfig, PPOConfig, \
 
 def PPOParams():
     return PPOConfig(
-        state_sz = 205, # TODO pass approprietly
+        state_sz = 203, # TODO pass approprietly
         action_sz = 3,
         neighbours_depth = 3,
         optimizer_config = AdamConfig(lr=1e-5),

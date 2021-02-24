@@ -10,7 +10,6 @@ from flatland.envs.agent_utils import RailAgentStatus
 from env.RailGraph import RailGraph
 
 # TreeObservation to vector of floats
-# TODO do not calc obs for ready_to_depart unless they will start moving next turn
 class SimpleObservation(TreeObsForRailEnv):
     def __init__(self, max_depth, neighbours_depth, timetable, deadlock_checker,
             greedy_checker, parallel=False, malfunction_obs=True, eval=False):
@@ -18,7 +17,7 @@ class SimpleObservation(TreeObsForRailEnv):
         self.max_depth = max_depth
         self.neighbours_depth = neighbours_depth
         self.n_neighbours = (2 ** (self.neighbours_depth + 1) - 2)
-        self.state_sz = (2 ** (max_depth + 1) - 2) * 14 + 9
+        self.state_sz = (2 ** (max_depth + 1) - 2) * 14 + 7
         self.parallel = parallel
         self.malfunction_obs = malfunction_obs
         self.eval = eval
@@ -35,7 +34,7 @@ class SimpleObservation(TreeObsForRailEnv):
         if self.eval: log().check_time("rail_graph_build")
         self.deadlock_checker.reset(self.env)
         self.greedy_checker.reset(self.env, self.deadlock_checker)
-        if self.eval: log().check_time()
+        if self.eval: log().check_time("deadlock_and_greedy_checkers_reset")
         self.timetable.reset(self.env)
         if self.eval: log().check_time("timetable_reset")
         self.encountered = defaultdict(list)
@@ -51,30 +50,14 @@ class SimpleObservation(TreeObsForRailEnv):
         if self.eval: log().check_time("timetable_update")
         self.deadlock_checker.update_deadlocks()
         if self.eval: log().check_time("deadlock_checker_update")
-        #  if self.eval: log().check_time()
-        #  self.rail_graph.update()
-        #  if self.eval: log().check_time("rail_graph_recalc")
-        #  self.deadlock_checker._fix_simplest_deps()
         observations = super().get_many(handles)
         return observations
 
     def get(self, handle):
-        if not self.timetable.is_ready(handle):
+        if self._get_checks(handle):
+            return self._get_internal(handle)
+        else:
             return None
-        if self.greedy_checker.greedy_position(handle):
-            return None
-        if self.deadlock_checker.old_deadlock(handle):
-            return None
-        if not self.malfunction_obs and self.env.agents[handle].malfunction_data["malfunction"] != 0:
-            return None
-
-        observation = self._get_internal(handle)
-
-        if self.greedy_checker.greedy_obs(handle, observation):
-            return None
-        self.deadlock_checker._far_deadlock(handle, observation)
-
-        return observation
 
     def _get_checks(self, handle):
         if not self.timetable.is_ready(handle):
@@ -108,8 +91,8 @@ class SimpleObservation(TreeObsForRailEnv):
         # root node is special
         # # add root features here
         observation_vector.extend([
-            position[0] / 100.0,
-            position[1] / 100.0,
+            #  position[0] / 100.0,
+            #  position[1] / 100.0,
             self.random_handles[handle],
             self.norm_bool(self.deadlock_checker.is_deadlocked(handle)),
             self.norm_bool(self.env.agents[handle].malfunction_data["malfunction"] == 0),
@@ -147,12 +130,14 @@ class SimpleObservation(TreeObsForRailEnv):
         if self.max_depth - lvl < self.neighbours_depth:
             self.encountered[self.cur_handle].append(node.first_agent_handle)
         return [
-               1 if node.dist_min_to_target >= 0 else -1, # real node  (not after target or after target) 0
+               1 if node.dist_min_to_target >= 0 else -1, # real node  (not after target or after target) # 0
                self.norm_dist(node.dist_other_agent_encountered), # 1
                self.norm_dist(node.dist_to_next_branch), # 2
                self.norm_dist(node.dist_to_unusable_switch), # 3
-               self.norm_dist(node.dist_min_to_target) - self.norm_dist(parent.dist_min_to_target), # delta is better isn't it? # 4
-               self.norm_dist(node.dist_min_to_target + node.dist_to_next_branch) - self.norm_dist(parent.dist_min_to_target), # 5
+               self.norm_dist(node.dist_min_to_target) - self.norm_dist(parent.dist_min_to_target) \
+                       if node.dist_min_to_target >= 0 else 0, # delta is better isn't it? # 4
+               self.norm_dist(node.dist_min_to_target + node.dist_to_next_branch) - self.norm_dist(parent.dist_min_to_target) \
+                       if node.dist_min_to_target >= 0 else 0, # 5
                self.norm_bool(node.num_agents_same_direction >= 1), # 6
                self.norm_bool(node.num_agents_same_direction >= 2), # 7
                self.norm_bool(node.num_agents_opposite_direction >= 1), # 8
@@ -189,7 +174,7 @@ class SimpleObservation(TreeObsForRailEnv):
                             q.append((value, lvl - 1))
 
             assert(cnt <= 2)
-            # cnt == 0 in case of target nearby?
+            # cnt != 2 in case of target nearby?
             # TODO probably rewriting TreeObs can help
             for i in range(cnt, 2):
                 observation.extend(self.get_padding_features(lvl))

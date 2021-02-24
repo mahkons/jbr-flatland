@@ -29,9 +29,6 @@ random.seed(RANDOM_SEED)
 init_logger("logdir", "tmp", use_wandb=False)
 
 
-def random_action():
-    return np.random.randint(0, 5)
-
 def evaluate_remote():
     remote_client = FlatlandRemoteClient()
     my_observation_builder = SimpleObservation(max_depth=3, neighbours_depth=3,
@@ -44,6 +41,8 @@ def evaluate_remote():
     controller.load_controller("generated/controller.torch")
     my_observation_builder.timetable.load_judge("generated/judge.torch")
 
+    render = False
+
     sum_reward, sum_percent_done = 0., 0.
     for evaluation_number in itertools.count():
         time_start = time.time()
@@ -54,26 +53,27 @@ def evaluate_remote():
         local_env = FlatlandWrapper(remote_client.env, FakeRewardShaper())
         local_env.n_agents = len(local_env.agents)
         log().check_time()
-        #  env_renderer = RenderTool(
-            #  local_env.env,
-            #  agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
-            #  show_debug=True,
-            #  screen_height=600,
-            #  screen_width=800
-        #  )
+        if render:
+            env_renderer = RenderTool(
+                local_env.env,
+                agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
+                show_debug=True,
+                screen_height=600,
+                screen_width=800
+            )
 
         env_creation_time = time.time() - time_start
 
         print("Evaluation Number : {}".format(evaluation_number))
 
-        # max_time_steps = int(4 * 2 * (env.width + env.height + n_agents/n_cities))
         time_taken_by_controller = []
         time_taken_per_step = []
         steps = 0
         done = defaultdict(lambda: False)
         while True:
             try:
-                #  env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
+                if render:
+                    env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
                 time_start = time.time()
                 action_dict = dict()
                 handles_to_ask = list()
@@ -126,7 +126,8 @@ def evaluate_remote():
                     sum_reward += reward
                     sum_percent_done += percent_done
                     print("Total reward: {}        Avg percent done: {}".format(sum_reward, sum_percent_done / (evaluation_number + 1)))
-                    #  env_renderer.close_window()
+                    if render:
+                        env_renderer.close_window()
                     break
             except TimeoutException as err:
                 print("Timeout! Will skip this episode and go to the next.", err)

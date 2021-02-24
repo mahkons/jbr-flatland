@@ -43,7 +43,7 @@ if __name__ == "__main__":
     logname = "tmp"
     init_logger("logdir", logname, use_wandb=False)
 
-    timetable_config = JudgeConfig(LinearOnAgentNumberSizeGenerator(0.0, 2))
+    timetable_config = JudgeConfig(LinearOnAgentNumberSizeGenerator(0.0, 10**10))
     obs_builder_config = SimpleObservationConfig(max_depth=3, neighbours_depth=3, timetable_config=timetable_config)
     reward_config = RewardsComposerConfig((
         FinishRewardConfig(finish_value=10),

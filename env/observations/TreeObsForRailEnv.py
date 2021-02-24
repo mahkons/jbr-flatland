@@ -15,8 +15,7 @@ from flatland.envs.agent_utils import RailAgentStatus, EnvAgent
 
 from env.Flatland import get_new_position
 
-#it is not argmax
-def fast_argmax(x):
+def first_nonzero(x):
     if x[0]:
         return 0
     if x[1]:
@@ -258,6 +257,7 @@ class TreeObsForRailEnv(ObservationBuilder):
 
         return node, position, direction
 
+# For optimization purposes
 class Graph():
     def __init__(self):
         self.env = None
@@ -280,7 +280,7 @@ class Graph():
 
                     self.total_transitions[(h, w)] = total_transitions
                     if num_transitions == 1 and total_transitions != 1:
-                        direction = fast_argmax(cell_transitions)
+                        direction = first_nonzero(cell_transitions)
                         self.one_transition[(h, w, d)] = direction
 
 

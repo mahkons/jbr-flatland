@@ -1,6 +1,6 @@
 import numpy as np
 
-# Attention, in Multiagent every worker goes throug curriculum
+# In Multiagent every worker goes through curriculum
 class EnvCurriculum():
     def __init__(self, env_configs, env_episodes):
         self.env_configs = env_configs

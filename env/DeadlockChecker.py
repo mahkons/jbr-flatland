@@ -14,19 +14,13 @@ class DeadlockChecker():
 
     def reset(self, env):
         self._is_deadlocked = np.zeros(len(env.agents))
-        self._is_far_deadlocked = np.zeros(len(env.agents))
         self._old_deadlock = np.zeros(len(env.agents))
         self.env = env
 
         self.agent_positions = defaultdict(lambda: -1)
-        self.far_dep = defaultdict(list)
-        self.simple_dep = dict()
 
     def is_deadlocked(self, handle):
         return self._is_deadlocked[handle]
-
-    def is_far_deadlocked(self, handle):
-        return self._is_far_deadlocked[handle]
 
     def old_deadlock(self, handle):
         return self._old_deadlock[handle]
@@ -69,9 +63,9 @@ class DeadlockChecker():
         return None # shrug
 
 
-    def fix_deps(self):
+    def _fix_deps(self):
         any_changes = True
-        # might be slow, but in practice won't
+        # might be slow, but in practice won't # TODO can be optimized
         while any_changes:
             any_changes = False
             for handle, agent in enumerate(self.env.agents):
@@ -107,52 +101,4 @@ class DeadlockChecker():
                     and not self.checked[handle]:
                 self._check_blocked(handle)
 
-        self.fix_deps()
-
-    # rather slow TODO
-    def _far_deadlock(self, handle, observation):
-        return
-        agent = self.env.agents[handle]
-        if agent.status == RailAgentStatus.DONE_REMOVED or self._is_deadlocked[handle] or self._is_far_deadlocked[handle]:
-            return
-
-        depth = self.env.obs_builder.max_depth
-        #  depth = self.env.obs_builder.max_depth - 2 # important. So deadlock won't be shocking event
-        far_deadlock = np.zeros(2 ** (depth + 1) - 2, dtype=np.bool)
-        for edge_id in range(len(far_deadlock)):
-            far_deadlock[edge_id] = (ObservationDecoder.has_deadlock(observation, edge_id) \
-                        or not ObservationDecoder.is_real(observation, edge_id)) \
-                    and not ObservationDecoder.is_after_target(observation, edge_id)
-
-        for d in range(depth - 1, 0, -1):
-            l, r = 2 ** d - 2, 2 ** (d + 1) - 2
-            lc, rc = 2 ** (d + 1) - 2, 2 ** (d + 2) - 2
-
-            cfar_deadlock = far_deadlock[lc:rc:2] * far_deadlock[lc+1:rc:2]
-            far_deadlock[l:r] = far_deadlock[l:r] + cfar_deadlock
-
-        if far_deadlock[0] and far_deadlock[1]:
-            self._is_far_deadlocked[handle] = True
-            self._is_deadlocked[handle] = True
-
-        self._simplest_deadlock(handle, observation)
-
-    # deadlock if there are two agents, seeing each other and both not able to choose another way
-    def _simplest_deadlock(self, handle, observation):
-        if self.env.agents[handle].status == RailAgentStatus.DONE_REMOVED or self._is_deadlocked[handle] or self._is_far_deadlocked[handle]:
-            return
-
-        if ObservationDecoder.is_real(observation, 1): return
-
-        opp = self.env.obs_builder.encountered[handle][0]
-        if opp != -1:
-            self.simple_dep[handle] = opp
-
-    def _fix_simplest_deps(self):
-        for handle, opp_handle in self.simple_dep.items():
-            if opp_handle in self.simple_dep.keys() \
-                    and self.simple_dep[opp_handle] == handle:
-                self._is_far_deadlocked[handle] = True
-                self._is_deadlocked[handle] = True
-
-        self.simple_dep.clear()
+        self._fix_deps()

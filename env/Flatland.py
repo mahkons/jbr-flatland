@@ -19,7 +19,6 @@ MOVEMENT_ARRAY = ((-1, 0), (0, 1), (1, 0), (0, -1))
 def get_new_position(position, movement):
     return (position[0] + MOVEMENT_ARRAY[movement][0], position[1] + MOVEMENT_ARRAY[movement][1])
 
-
 class TrainAction(IntEnum):
     NOTHING = 0
     LEFT = 1
@@ -37,7 +36,7 @@ class FlatlandWrapper():
 
         #  self.n_cities = self.env.max_num_cities
         self.n_cities = 3 # TODO fix?
-        self.n_agents = env.number_of_agents # chekc if works with remote
+        self.n_agents = env.number_of_agents # check if works with remote
         self.action_sz = 3
         self.state_sz = self.env.obs_builder.state_sz
         self.steps = 0
@@ -58,8 +57,7 @@ class FlatlandWrapper():
             if action != -1:
                 transformed_action_dict[handle] = action
 
-        action_dict = transformed_action_dict
-        obs, reward, done, info = self.env.step(action_dict)
+        obs, reward, done, info = self.env.step(transformed_action_dict)
         for key in set(obs.keys()):
             if obs[key] is None:
                 del obs[key]
@@ -69,8 +67,7 @@ class FlatlandWrapper():
                 done[handle] = 1 # the end
 
         real_reward = sum(reward.values())
-        for key, value in reward.items():
-            reward[key] = 0 # just lol
+        reward = defaultdict(float) # just remove rewards from env
         reward = self.reward_shaper(self, obs, action_dict, reward, done)
 
         self.total_reward += real_reward
@@ -202,13 +199,7 @@ class Flatland():
         )
         self._max_episode_steps = self.env._max_episode_steps
 
-        self.env_renderer = RenderTool(
-            self.env,
-            agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
-            show_debug=True,
-            screen_height=600,
-            screen_width=800
-        )
+        self._renderer_inited = False
 
         self.agents = DelegatedAttribute(self.env, "agents")
         self.rail = DelegatedAttribute(self.env, "rail")
@@ -220,11 +211,21 @@ class Flatland():
         return self.env.step(action_dict)
 
     def reset(self):
-        self.env_renderer.reset()
+        if self._renderer_inited:
+            self.env_renderer.reset()
         obs, info = self.env.reset()
         return obs, info
 
     def render(self):
+        if not self._renderer_inited:
+            self._renderer_inited = True
+            self.env_renderer = RenderTool(
+                self.env,
+                agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
+                show_debug=True,
+                screen_height=600,
+                screen_width=800
+            )
         self.env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
 
 

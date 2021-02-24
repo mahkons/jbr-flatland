@@ -43,8 +43,6 @@ class Logger():
     def get_log_path(self):
         return self.dir
 
-
-
     def update_params(self, params):
         self.params.update(params.to_dict())
         params_path = os.path.join(self.dir, "params.csv")

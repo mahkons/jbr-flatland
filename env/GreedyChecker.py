@@ -26,20 +26,10 @@ class GreedyChecker():
         agent = self.env.agents[handle]
         return (not agent.status in (RailAgentStatus.DONE, RailAgentStatus.DONE_REMOVED, RailAgentStatus.READY_TO_DEPART)) \
                 and \
-                    (not self.on_decision_cell(*agent.position, agent.direction) or agent.malfunction_data["malfunction"] != 0 \
-                            or self.deadlock_checker.is_far_deadlocked(handle)) \
+                    (not self.on_decision_cell(*agent.position, agent.direction) or agent.malfunction_data["malfunction"] != 0)
                 and \
                     not self.deadlock_checker.is_deadlocked(handle)
 
-    # greedy if
-    # prev action was "STOP"
-    # agent is near decision
-    # there is an opposite agent on the edge
-    def greedy_obs(self, handle, observation):
-        return False
-        return ObservationDecoder.is_near_next_decision(observation) \
-                and self.env.obs_builder.last_action[handle] == 2 \
-                and ObservationDecoder.is_more_than_one_opposite_direction(observation, 0)
 
     def reinit_greedy(self):
         self.greedy_way = defaultdict(int)
