@@ -19,7 +19,7 @@ from configs import Experiment, AdamConfig, FlatlandConfig, \
 from env.Flatland import Flatland
 from env.CartPole import CartPole, MultiCartPole
 from env.LunarLander import MultiLunarLander
-from env.timetables.ShortestPathAgentLauncher import ConstWindowSizeGenerator, LinearOnAgentNumberSizeGenerator
+from agent.judge.Judge import ConstWindowSizeGenerator, LinearOnAgentNumberSizeGenerator
 from logger import log, init_logger
 
 from params import PPOParams

@@ -13,13 +13,11 @@ from flatland.envs.malfunction_generators import malfunction_from_params, Malfun
 
 from flatland.utils.rendertools import RenderTool, AgentRenderVariant
 
-from env.Contradictions import Contradictions
 
 MOVEMENT_ARRAY = ((-1, 0), (0, 1), (1, 0), (0, -1))
 #  @njit
 def get_new_position(position, movement):
     return (position[0] + MOVEMENT_ARRAY[movement][0], position[1] + MOVEMENT_ARRAY[movement][1])
-
 
 
 class TrainAction(IntEnum):
@@ -52,7 +50,6 @@ class FlatlandWrapper():
         self.distance_map = DelegatedAttribute(self.env, "distance_map")
 
         self.cur_env = 0
-        self.contr = Contradictions()
 
     def step(self, action_dict):
         transformed_action_dict = dict()
@@ -62,30 +59,6 @@ class FlatlandWrapper():
                 transformed_action_dict[handle] = action
 
         action_dict = transformed_action_dict
-        self.contr.start_episode()
-        for h in range(len(self.env.agents)):
-            if h in action_dict:
-                a = action_dict[h]
-                if self.contr.is_bad(h, a):
-                    action_dict[h] = 4
-                else:
-                    self.contr.add_elem(h, a)
-            else:
-                if self.env.agents[h].status == RailAgentStatus.ACTIVE:
-                    self.contr.add_elem(h, 4)
-
-        self.contr.start_episode()
-        for h in reversed(range(len(self.env.agents))):
-            if h in action_dict:
-                a = action_dict[h]
-                if self.contr.is_bad(h, a):
-                    action_dict[h] = 4
-                else:
-                    self.contr.add_elem(h, a)
-            else:
-                if self.env.agents[h].status == RailAgentStatus.ACTIVE:
-                    self.contr.add_elem(h, 4)
-
         obs, reward, done, info = self.env.step(action_dict)
         for key in set(obs.keys()):
             if obs[key] is None:
@@ -113,7 +86,6 @@ class FlatlandWrapper():
             if obs[key] is None:
                 del obs[key]
         self.reward_shaper.reset(self)
-        self.contr.reset(self)
         return obs
 
     def greedy_position(self, handle):

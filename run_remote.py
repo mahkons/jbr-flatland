@@ -8,7 +8,6 @@ import random
 from logger import log, init_logger
 
 from env.Flatland import Flatland, FlatlandWrapper
-from env.Contradictions import Contradictions
 from env.rewards.FakeRewardShaper import FakeRewardShaper
 from env.GreedyFlatland import GreedyFlatland
 from env.DeadlockChecker import DeadlockChecker
@@ -42,7 +41,6 @@ def evaluate_remote():
     my_observation_builder = SimpleObservation(max_depth=3, neighbours_depth=3,
             timetable=Judge(LinearOnAgentNumberSizeGenerator(0.03, 5), device=torch.device("cpu")),
             deadlock_checker=DeadlockChecker(), greedy_checker=GreedyChecker(), parallel=False, eval=True)
-    contr = Contradictions()
 
     params = torch.load("generated/params.torch")
     params.neighbours_depth=my_observation_builder.neighbours_depth
@@ -60,8 +58,6 @@ def evaluate_remote():
         local_env = FlatlandWrapper(remote_client.env, FakeRewardShaper())
         local_env.n_agents = len(local_env.agents)
         log().check_time()
-        contr.reset(local_env)
-        log().check_time("contradictions_reset")
         #  env_renderer = RenderTool(
             #  local_env.env,
             #  agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
@@ -109,32 +105,6 @@ def evaluate_remote():
 
                 time_taken = time.time() - time_start
                 time_taken_by_controller.append(time_taken)
-
-                log().check_time()
-                contr.start_episode()
-                for h in range(len(local_env.agents)):
-                    if h in action_dict:
-                        a = action_dict[h]
-                        if contr.is_bad(h, a):
-                            action_dict[h] = 4
-                        else:
-                            contr.add_elem(h, a)
-                    else:
-                        if local_env.agents[h].status == RailAgentStatus.ACTIVE:
-                            contr.add_elem(h, 4)
-
-                contr.start_episode()
-                for h in reversed(range(len(local_env.agents))):
-                    if h in action_dict:
-                        a = action_dict[h]
-                        if contr.is_bad(h, a):
-                            action_dict[h] = 4
-                        else:
-                            contr.add_elem(h, a)
-                    else:
-                        if local_env.agents[h].status == RailAgentStatus.ACTIVE:
-                            contr.add_elem(h, 4)
-                log().check_time("contradictions_update")
 
                 time_start = time.time()
                 observation, all_rewards, done, info = remote_client.env_step(action_dict)

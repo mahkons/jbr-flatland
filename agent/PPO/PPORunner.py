@@ -6,7 +6,6 @@ from itertools import count, chain
 from flatland.envs.agent_utils import RailAgentStatus
 
 from agent.PPO.PPORollout import PPORollout, PPOTransition
-from env.Contradictions import Contradictions
 
 class PPORunner():
     def _select_actions(self, state):

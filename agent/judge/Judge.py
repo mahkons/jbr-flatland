@@ -9,7 +9,6 @@ from flatland.envs.agent_utils import RailAgentStatus
 
 from agent.judge.JudgeNetwork import JudgeNetwork
 from agent.judge.JudgeFeatures import JudgeFeatures
-from agent.judge.ThresholdBandit import ThresholdBandit
 
 from logger import log
 
@@ -23,7 +22,6 @@ class Judge():
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=1e-4)
 
         self.cur_threshold = 0.97
-        self.threshold_optimizer = ThresholdBandit()
 
         self.batch_size = 8
         self.epochs = 3
@@ -60,9 +58,6 @@ class Judge():
 
         reward = torch.sum(self.env._max_episode_steps - self.end_time[finished_handles])
         reward /= len(self.env.agents) * self.env._max_episode_steps
-        #  self.threshold_optimizer.step(self.cur_threshold, reward)
-        #  print("Threshold: {}".format(self.cur_threshold))
-        #  self.cur_threshold = self.threshold_optimizer.choose_threshold()
 
         probs = self.sent_priorities[used_handles]
         states = self.sent_states[used_handles]
@@ -212,24 +207,20 @@ class Judge():
 
 
 
-# simple optimization
-# naive
-# make to steps and move in direction with better reward
-class ThresholdOptimizer():
-    def __init__(self):
-        self.type = 0
-        self.prev_reward, self.prev_threshold = None, None
+class ConstWindowSizeGenerator():
+    def __init__(self, window_size):
+        self.window_size = window_size
 
-        self.lr = 1e-3
+    def __call__(self, env):
+        return self.window_size
 
-    def get_threshold(self, threshold, reward):
-        if self.type == 0:
-            self.prev_threshold, self.prev_reward = threshold, reward
-            new_threshold = threshold + 0.01
-        else:
-            delta_reward = reward - self.prev_reward
-            new_threshold = self.prev_threshold + np.sign(delta_reward) * self.lr
-            
-        self.type = 1 - self.type
-        return new_threshold
+class LinearOnAgentNumberSizeGenerator():
+    def __init__(self, alpha, beta):
+        self.alpha = alpha
+        self.beta = beta
+
+    def __call__(self, env):
+        return int(self.alpha * len(env.agents) + self.beta)
+
+
 
