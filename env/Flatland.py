@@ -3,6 +3,7 @@
 from enum import IntEnum
 from collections import defaultdict
 import torch
+import itertools
 
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.agent_utils import RailAgentStatus
@@ -67,7 +68,7 @@ class FlatlandWrapper():
                 done[handle] = 1 # the end
 
         real_reward = sum(reward.values())
-        reward = defaultdict(float) # just remove rewards from env
+        reward = dict(zip(reward.keys(), itertools.repeat(0.)))
         reward = self.reward_shaper(self, obs, action_dict, reward, done)
 
         self.total_reward += real_reward

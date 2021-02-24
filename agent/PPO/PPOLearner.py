@@ -53,7 +53,7 @@ class PPOLearner():
         with torch.no_grad():
             next_state_values = self.controller.critic_net(next_state).squeeze(1)
 
-        logits = self.controller.actor_net._make_logits(states, neighbours_states)
+        logits = self.controller._make_logits(state, neighbours_states)
 
         action_distribution = Categorical(logits=logits)
         new_log_prob = action_distribution.log_prob(action)

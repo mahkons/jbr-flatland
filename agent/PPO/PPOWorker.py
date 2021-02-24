@@ -37,7 +37,7 @@ class PPOWorker():
         # moving this code to worker saves learner time
         with torch.no_grad():
             state_values = self.controller.critic_net(state).squeeze(1)
-            next_values = torch.cat([state_value[1:], self.controller.critic_net(next_state[-1]).squeeze(1)])
+            next_values = torch.cat([state_values[1:], self.controller.critic_net(next_state[-1:]).squeeze(1)])
             expected_state_values = (next_values * torch.pow(self.gamma, actual_len.float()) * (1 - done)) + reward
             gae = expected_state_values - state_values
             gae_copy = gae.clone()
