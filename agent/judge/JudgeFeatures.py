@@ -10,7 +10,7 @@ from env.Flatland import get_new_position
 class JudgeFeatures():
     def __init__(self):
         self.state_sz = 7
-        self.path_discount = 1 # can be decreased
+        self.path_discount = 0.999 # can be decreased
 
     def reset(self, env):
         self.env = env

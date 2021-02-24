@@ -68,6 +68,9 @@ class Judge():
         n = len(target)
 
         target, states = target.to(self.device).repeat(self.epochs+1), states.to(self.device).repeat((self.epochs+1,1))
+        permutation = torch.randperm(len(target))
+        target, states = target[permutation], states[permutation]
+
         sum_loss = 0
         for l in range(0, n*self.epochs, self.batch_size):
             r = min(len(target), l + self.batch_size)
