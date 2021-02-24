@@ -121,10 +121,10 @@ class PPOLearner():
                 self.controller.save_controller(log().get_log_path(), "final_controller.torch")
                 self.judge.save_judge(log().get_log_path(), "final_judge.torch")
             if self.train_state.is_training():
-                #  self._optimize(rollout)
-                judge_info = self.judge.optimize(judge_rollout)
-                log().add_plot_point("judge_loss", (cur_episode, cur_steps, judge_info["loss"], info["env"]))
-                log().add_plot_point("judge_threshold", (cur_episode, cur_steps, info["judge_threshold"], info["env"]))
+                self._optimize(rollout)
+                #  judge_info = self.judge.optimize(judge_rollout)
+                #  log().add_plot_point("judge_loss", (cur_episode, cur_steps, judge_info["loss"], info["env"]))
+                #  log().add_plot_point("judge_threshold", (cur_episode, cur_steps, info["judge_threshold"], info["env"]))
             
 
             self.train_state.step(self.controller, self.judge, info["reward"])

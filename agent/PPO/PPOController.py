@@ -49,6 +49,7 @@ class PPOController():
         return dict(zip(handles, actions)), dict(zip(handles, log_probs))
 
 
+    # run_remote version TODO refactor
     def fast_select_actions(self, handles, state_dict, neighbours_handles, train=True):
         if not handles:
             return {}
