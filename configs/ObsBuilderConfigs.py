@@ -1,6 +1,6 @@
 from configs.Config import Config
 
-from env.observations import SimpleObservation, ShortPathObs
+from env.observations import SimpleObservation
 from env.DeadlockChecker import DeadlockChecker
 from env.GreedyChecker import GreedyChecker
 
@@ -24,10 +24,3 @@ class SimpleObservationConfig(ObsBuilderConfig):
                     greedy_checker=GreedyChecker(),
                 )
 
-
-class ShortPathObsConfig(ObsBuilderConfig):
-    def __init__(self):
-        pass
-
-    def create_builder(self):
-        return ShortPathObs()

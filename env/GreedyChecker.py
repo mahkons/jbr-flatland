@@ -26,7 +26,7 @@ class GreedyChecker():
         agent = self.env.agents[handle]
         return (not agent.status in (RailAgentStatus.DONE, RailAgentStatus.DONE_REMOVED, RailAgentStatus.READY_TO_DEPART)) \
                 and \
-                    (not self.on_decision_cell(*agent.position, agent.direction) or agent.malfunction_data["malfunction"] != 0)
+                    (not self.on_decision_cell(*agent.position, agent.direction) or agent.malfunction_data["malfunction"] != 0) \
                 and \
                     not self.deadlock_checker.is_deadlocked(handle)
 

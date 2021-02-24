@@ -32,7 +32,8 @@ init_logger("logdir", "tmp", use_wandb=False)
 def evaluate_remote():
     remote_client = FlatlandRemoteClient()
     my_observation_builder = SimpleObservation(max_depth=3, neighbours_depth=3,
-            timetable=Judge(LinearOnAgentNumberSizeGenerator(0.03, 5), device=torch.device("cpu")),
+            timetable=Judge(LinearOnAgentNumberSizeGenerator(0.03, 5), lr=0,
+                    batch_size=0, optimization_epochs=0, device=torch.device("cpu")),
             deadlock_checker=DeadlockChecker(), greedy_checker=GreedyChecker(), parallel=False, eval=True)
 
     params = torch.load("generated/params.torch")

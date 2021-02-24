@@ -19,7 +19,7 @@ class PPOLearner():
     def __init__(self, env_config, controller_config, n_workers, device):
         self.n_workers = n_workers
         self.controller = controller_config.create_controller(device)
-        self.judge = Judge(None, device)
+        self.judge = env_config.env_configs[0].observation_builder_config.timetable_config.create_timetable() # ugly
         self.device = device
 
         num_gpus = 0

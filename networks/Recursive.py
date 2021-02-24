@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-GENERAL_SZ = 9
+GENERAL_SZ = 7
 FEATURES_SZ = 14
 HIDDEN_SZ = 64
 

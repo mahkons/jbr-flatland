@@ -13,18 +13,16 @@ from agent.judge.JudgeFeatures import JudgeFeatures
 from logger import log
 
 class Judge():
-    def __init__(self, window_size_generator, device):
+    def __init__(self, window_size_generator, lr, batch_size, optimization_epochs, device):
         self.obs_builder = JudgeFeatures()
         self.window_size_generator = window_size_generator
         self.device = device
 
         self.net = JudgeNetwork(self.obs_builder.state_sz).to(self.device)
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=1e-4)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
 
-        self.cur_threshold = 0.97
-
-        self.batch_size = 8
-        self.epochs = 3
+        self.batch_size = batch_size
+        self.epochs = optimization_epochs
 
     def reset(self, env):
         self.env = env
@@ -53,16 +51,10 @@ class Judge():
         used_handles = [handle for handle in range(len(self.env.agents)) if self.ready_to_depart[handle] != 0]
         finished_handles = [handle for handle in range(len(self.env.agents)) if self.ready_to_depart[handle] == 2]
         target = torch.tensor([1. if self.env.agents[handle].status == RailAgentStatus.DONE_REMOVED else 0. for handle in used_handles])
-
-        # not perfect place for cur_threshold update
-
-        reward = torch.sum(self.env._max_episode_steps - self.end_time[finished_handles])
-        reward /= len(self.env.agents) * self.env._max_episode_steps
-
-        probs = self.sent_priorities[used_handles]
         states = self.sent_states[used_handles]
         return target, states
 
+    # TODO add a replay buffer or something for the sake of data efficiency
     def optimize(self, rollout):
         target, states = rollout
         n = len(target)
@@ -100,28 +92,23 @@ class Judge():
             priorities = self.net(observations).squeeze(1)
         return priorities
 
+    # rule for choosing best agent
     def _get_expected(self, priority, observation):
-        return -priority #+ observation[0]/(5 * (self.env.width + self.env.height))# or what?
+        return -priority 
         prob = F.sigmoid(priority)
         remaining_time = self.env._max_episode_steps - self.env._elapsed_steps
         return prob * min(observation[0], remaining_time) + (1 - prob) * remaining_time
 
     def calc_priorities(self, handles):
-        self.priority_timer += 1
-        if self.priority_timer > self.last_priorities_update or len(self.env.agents) < 100: # yeah
-            self.observations[handles] = self._get_observations(handles)
-            self.priorities[handles] = self._get_priorities(self.observations[handles])
-            self.last_priorities_update = self.priority_timer
+        self.observations[handles] = self._get_observations(handles)
+        self.priorities[handles] = self._get_priorities(self.observations[handles])
         return self.priorities[handles], self.observations[handles]
-
 
     def update(self):
         self.timer += 1
-        #  self.cur_threshold -= 0.1 / self.env._max_episode_steps
         self.cur_threshold -= 1e-5
+
         self.update_finished()
-        if self.timer - self.prev_check < 10 and len(self.env.agents) > 100: # optimizations
-            return
         self.prev_check = self.timer
         self.priority_timer += 100
         self.any_changes = False
@@ -131,13 +118,15 @@ class Judge():
             start_time += 200
         self.first_launch = False
 
+        # TODO might be slow on big envs too
         self.obs_builder.update_begin(self.active_agents)
+
+        # involves calculation of priorities on every iteration
+        # might be slow
 
         # send_more stands for minimal number of active agents
         # judge will send agent if probability of arriving is big enough
-        while not self.all_out and time.time() - start_time < 5:
-            #  noise = torch.empty_like(priorities).data.normal_(0, 0.2) # exploration noise
-            #  priorities += noise
+        while not self.all_out and time.time() - start_time < 4:
             valid_handles = [handle for handle in range(len(self.env.agents)) if self.ready_to_depart[handle] == 0]
             priorities, observations = self.calc_priorities(valid_handles)
 
@@ -152,8 +141,6 @@ class Judge():
                 break
 
             if self.send_more <= 0 and torch.sigmoid(best_priority) < self.cur_threshold:
-                # involves calculation of priorities on every iteration
-                # might be slow
                 break
 
             self.sent_priorities[best_handle] = best_priority
@@ -164,7 +151,7 @@ class Judge():
         self.obs_builder.update_end(self.active_agents)
 
     def update_finished(self):
-        for handle in range(len(self.env.agents)):
+        for handle in list(self.active_agents):
             if (self.env.agents[handle].status == RailAgentStatus.DONE_REMOVED \
                     or self.env.obs_builder.deadlock_checker.is_deadlocked(handle))\
                 and self.ready_to_depart[handle] == 1:

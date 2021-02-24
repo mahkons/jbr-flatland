@@ -9,7 +9,7 @@ from env.Flatland import get_new_position
 
 class JudgeFeatures():
     def __init__(self):
-        self.state_sz = 7
+        self.state_sz = 8
         self.path_discount = 0.999 # can be decreased
 
     def reset(self, env):
@@ -51,12 +51,14 @@ class JudgeFeatures():
         self.prev_agent_pos = defaultdict(lambda: (-1, -1))
 
     def get_many(self, handles):
+        remaining_time = (self.env._max_episode_steps - self.env._elapsed_steps) / self.env._max_episode_steps
         return torch.stack([
             self.distance[handles],
             self.load_opposite_direction[handles],
             self.load_same_direction[handles],
             self.num_agents_opposite_direction[handles] * self.NUM_NORM,
             self.num_agents_same_direction[handles] * self.NUM_NORM,
+            torch.tensor([remaining_time]).repeat(len(handles)),
             2 * (self.num_opposite_agents_before_switch[handles] > 0).float() - 1, # has agent before switch
             2 * self.has_deadlocked_on_way[handles] - 1,
         ], dim=1)
