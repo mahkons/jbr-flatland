@@ -49,7 +49,7 @@ class ActorNet(nn.Module):
         self.fc_thought = nn.Linear(THOUGHT_SZ, INTENTION_SZ + self.neighbours_depth)
         self.signal_attention = MultiHeadAttention(state_sz=INTENTION_SZ + self.neighbours_depth, n_head=N_HEAD)
         self.signal_seq = nn.Sequential(nn.Linear(THOUGHT_SZ, INTENTION_SZ, bias=False), nn.ReLU(inplace=True))
-        self.action_seq = nn.Sequential(nn.Linear(THOUGHT_SZ + (INTENTION_SZ + self.neighbours_depth) * N_HEAD, 256),
+        self.action_seq = nn.Sequential(nn.Linear(THOUGHT_SZ, 256),
                 nn.ReLU(inplace=True), nn.Linear(256, action_sz))
 
     def think(self, state):
@@ -65,8 +65,7 @@ class ActorNet(nn.Module):
         key = _add_direction(signals, self.neighbours_depth)
         attended_signals = self.signal_attention(query=query, key=key, value=key).squeeze(1)
 
-        input = torch.cat([thought, attended_signals], dim=1)
-        return self.action_seq(input)
+        return self.action_seq(thought)
 
 
 class CriticNet(nn.Module):
