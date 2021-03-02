@@ -18,6 +18,7 @@ class PPOConfig(ControllerConfig):
             neighbours_depth,
             optimizer_config,
             batch_size,
+            rollouts_sample,
             gae_horizon,
             epochs_update,
             gamma,
@@ -33,6 +34,7 @@ class PPOConfig(ControllerConfig):
         self.neighbours_depth = neighbours_depth
         self.optimizer_config = optimizer_config
         self.batch_size = batch_size
+        self.rollouts_sample = rollouts_sample
         self.gae_horizon = gae_horizon
         self.epochs_update = epochs_update
         self.gamma = gamma
