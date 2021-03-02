@@ -35,6 +35,7 @@ class PPOLearner():
 
 
         self.batch_size = controller_config.batch_size
+        self.rollouts_sample = controller_config.rollouts_sample
         self.gae_horizon = controller_config.gae_horizon
         self.value_loss_coeff = controller_config.value_loss_coeff
         self.entropy_coeff = controller_config.entropy_coeff
@@ -46,6 +47,8 @@ class PPOLearner():
                 chain(self.controller.critic_net.parameters(), self.controller.actor_net.parameters()))
 
         self.train_state = LearnerState(train_iters=2000, exploit_iters=500)
+
+        self.rollouts_buffer = list()
 
     # TODO different updates for target_actor/actor
     def _calc_loss(self, state, action, old_log_prob, reward, next_state, done, gae, neighbours_states, actual_len):
@@ -71,6 +74,14 @@ class PPOLearner():
         if not rollouts:
             return
         combined_rollout = PPORollout.combine_rollouts(rollouts)
+        self.rollouts_buffer.append(combined_rollout)
+
+        # optimize by batch of several rollouts
+        if len(self.rollouts_buffer) != self.rollouts_sample:
+            return
+
+        combined_rollout = PPORollout.combine_rollouts(self.rollouts_buffer)
+        self.rollouts_buffer.clear()
 
         state, action, log_prob, reward, next_state, done, neighbours_states, actual_len = combined_rollout.unzip_transitions(self.device)
         gae = combined_rollout.gae.to(self.device)
