@@ -16,7 +16,7 @@ def PPOParams():
         neighbours_depth = 3,
         optimizer_config = AdamConfig(lr=1e-5),
         batch_size = 128,
-        rollouts_sample = 1,
+        rollouts_sample = 8,
         gae_horizon = 128,
         epochs_update = 3,
         gamma = 0.995,
