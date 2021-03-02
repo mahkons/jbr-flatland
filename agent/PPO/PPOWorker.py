@@ -2,6 +2,7 @@ import ray
 import torch
 
 from agent.PPO.PPORunner import PPORunner
+from params import VMIN, VMAX, N_ATOMS
 
 @ray.remote
 class PPOWorker():
@@ -12,6 +13,7 @@ class PPOWorker():
         self.gamma = controller_config.gamma
         self.lam = controller_config.lam
         self.gae_horizon = controller_config.gae_horizon
+        self.support = torch.linspace(VMIN, VMAX, N_ATOMS)
 
         self.runner = PPORunner()
 
@@ -34,10 +36,12 @@ class PPOWorker():
         return rollout_dict, self.env.obs_builder.timetable.get_rollout(), info
 
     def _calc_gae(self, state, next_state, reward, done, actual_len):
-        # moving this code to worker saves learner time
         with torch.no_grad():
-            state_values = self.controller.critic_net(state).squeeze(1)
-            next_values = torch.cat([state_values[1:], self.controller.critic_net(next_state[-1:]).squeeze(1)])
+            state_values = (torch.exp(self.controller.critic_net(state)) * self.support.unsqueeze(0)).sum(dim=1)
+            next_values = torch.cat([
+                state_values[1:],
+                (torch.exp(self.controller.critic_net(next_state[-1:])) * self.support.unsqueeze(0)).sum(dim=1)
+            ])
             expected_state_values = (next_values * torch.pow(self.gamma, actual_len.float()) * (1 - done)) + reward
             gae = expected_state_values - state_values
             gae_copy = gae.clone()

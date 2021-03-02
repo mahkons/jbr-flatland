@@ -5,6 +5,8 @@ import torch.nn.functional as F
 from networks.Attention import MultiHeadAttention
 from networks.Recursive import RecursiveLayer
 
+N_ATOMS = 51
+
 def create_linear_layers(in_sz, out_sz, layers_sz):
     layers = list()
     for sz in layers_sz:
@@ -72,8 +74,12 @@ class ActorNet(nn.Module):
 class CriticNet(nn.Module):
     def __init__(self, state_sz, action_sz, layers_sz):
         super(CriticNet, self).__init__()
-        layers = create_linear_layers(state_sz, 1, layers_sz)
-        self.seq = nn.Sequential(RecursiveLayer(state_sz, 1))
+        self.seq = nn.Sequential(
+                RecursiveLayer(state_sz, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, N_ATOMS),
+                nn.LogSoftmax(dim=1),
+            )
 
     def forward(self, state):
         return self.seq(state)

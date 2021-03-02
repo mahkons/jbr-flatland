@@ -11,7 +11,7 @@ from copy import deepcopy
 from agent.PPO.PPOWorker import PPOWorker
 from agent.PPO.PPORunner import PPORunner
 from agent.PPO.PPORollout import PPORollout
-from agent.PPO.PPOLosses import value_loss, policy_loss, value_loss_with_IS
+from agent.PPO.PPOLosses import value_loss, policy_loss, value_loss_with_IS, value_loss_distributional
 from agent.judge.Judge import Judge
 from logger import log
 
@@ -61,7 +61,8 @@ class PPOLearner():
         action_distribution = Categorical(logits=logits)
         new_log_prob = action_distribution.log_prob(action)
 
-        critic_loss = value_loss_with_IS(state_values, next_state_values, new_log_prob, old_log_prob, reward, done, self.gamma, actual_len)
+        critic_loss = value_loss_distributional(state_values, next_state_values, new_log_prob,
+                old_log_prob, reward, done, self.gamma, actual_len)
         actor_loss = policy_loss(gae, new_log_prob, old_log_prob, self.clip_eps)
         entropy_loss = -action_distribution.entropy().mean()
 

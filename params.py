@@ -5,6 +5,9 @@ import copy
 from configs import AdamConfig, PPOConfig, \
         FlatlandConfig, SimpleObservationConfig, SimpleRewardConfig, SparseRewardConfig
 
+VMAX = 11
+VMIN = -6
+N_ATOMS = 51
 
 def PPOParams():
     return PPOConfig(
@@ -13,7 +16,7 @@ def PPOParams():
         neighbours_depth = 3,
         optimizer_config = AdamConfig(lr=1e-5),
         batch_size = 128,
-        rollouts_sample = 8,
+        rollouts_sample = 1,
         gae_horizon = 128,
         epochs_update = 3,
         gamma = 0.995,
@@ -21,8 +24,8 @@ def PPOParams():
         clip_eps = 0.2,
         value_loss_coeff = 0.5,
         entropy_coeff = 0.01,
-        actor_layers_sz=[256, 128],
-        critic_layers_sz=[256, 128],
+        actor_layers_sz=None,
+        critic_layers_sz=None,
     )
 
 # env configs
