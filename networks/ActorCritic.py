@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from networks.Attention import MultiHeadAttention
-from networks.Recursive import RecursiveLayer
+from networks.Recursive import RecursiveLayer, LinearFeatures
 
 def create_linear_layers(in_sz, out_sz, layers_sz):
     layers = list()
@@ -44,7 +44,7 @@ class ActorNet(nn.Module):
         super(ActorNet, self).__init__()
 
         self.neighbours_depth = neighbours_depth
-        self.think_seq = nn.Sequential(RecursiveLayer(state_sz, THOUGHT_SZ))
+        self.think_seq = nn.Sequential(LinearFeatures(state_sz, THOUGHT_SZ))
 
         self.fc_thought = nn.Linear(THOUGHT_SZ, INTENTION_SZ + self.neighbours_depth)
         self.signal_attention = MultiHeadAttention(state_sz=INTENTION_SZ + self.neighbours_depth, n_head=N_HEAD)
@@ -73,7 +73,7 @@ class CriticNet(nn.Module):
     def __init__(self, state_sz, action_sz, layers_sz):
         super(CriticNet, self).__init__()
         layers = create_linear_layers(state_sz, 1, layers_sz)
-        self.seq = nn.Sequential(RecursiveLayer(state_sz, 1))
+        self.seq = nn.Sequential(LinearFeatures(state_sz, 1))
 
     def forward(self, state):
         return self.seq(state)

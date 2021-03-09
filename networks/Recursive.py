@@ -12,6 +12,23 @@ def _get_depth(sz):
             return i - 1
     assert False
 
+class LinearFeatures(nn.Module):
+    def __init__(self, state_sz, out_sz):
+        super(LinearFeatures, self).__init__()
+        self.seq = nn.Sequential(
+                nn.Linear(203, 256),
+                nn.ReLU(inplace=True),
+                nn.Linear(256, 256),
+                nn.ReLU(inplace=True),
+                nn.Linear(256, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, out_sz)
+            )
+
+    def forward(self, state):
+        return self.seq(state)
+
+
 class RecursiveLayer(nn.Module):
     def __init__(self, state_sz, out_sz):
         super(RecursiveLayer, self).__init__()
