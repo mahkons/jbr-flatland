@@ -80,7 +80,7 @@ class ActorNet(nn.Module):
         second_log = self.second_head(input[~mask])
 
         bsz = states.shape[0]
-        second_log = torch.cat([-torch.ones((bsz - mask.sum(), 1)) * 1e6, second_log], dim=1)
+        second_log = torch.cat([-torch.ones((bsz - mask.sum(), 1), device=second_log.device) * 1e6, second_log], dim=1)
 
         actions = torch.empty((bsz, 3))
         actions[mask] = first_log

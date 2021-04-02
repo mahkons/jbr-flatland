@@ -190,7 +190,7 @@ class ObservationDecoder():
 
     @staticmethod
     def is_real(obs, edge_id):
-        return obs[7 + 14 * edge_id + 0] > 0
+        return obs[7 + 14 * edge_id + 0] == 1
     
     @staticmethod
     def is_after_target(obs, edge_id):
