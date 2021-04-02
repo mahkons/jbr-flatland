@@ -186,39 +186,39 @@ class SimpleObservation(TreeObsForRailEnv):
 class ObservationDecoder():
     @staticmethod
     def is_near_next_decision(obs):
-        return obs[7] > 0
+        return obs[5] > 0
 
     @staticmethod
     def is_real(obs, edge_id):
-        return obs[9 + 14 * edge_id + 0] != 0
+        return obs[7 + 14 * edge_id + 0] > 0
     
     @staticmethod
     def is_after_target(obs, edge_id):
-        return obs[9 + 14 * edge_id + 0] == -1
+        return obs[7 + 14 * edge_id + 0] == -1
 
     @staticmethod
     def dist_to_other_agent(obs, edge_id):
-        return (obs[9 + 14 * edge_id + 1] + 10) * 100
+        return (obs[7 + 14 * edge_id + 1] + 10) * 100
 
     @staticmethod
     def dist_to_next_branch(obs, edge_id):
-        return (obs[9 + 14 * edge_id + 2] + 10) * 100
+        return (obs[7 + 14 * edge_id + 2] + 10) * 100
 
     @staticmethod
     def dist_to_unusable_switch(obs, edge_id):
-        return (obs[9 + 14 * edge_id + 3] + 10) * 100
+        return (obs[7 + 14 * edge_id + 3] + 10) * 100
 
     @staticmethod
     def is_more_than_one_opposite_direction(obs, edge_id):
-        return obs[9 + 14 * edge_id + 8] > 0
+        return obs[7 + 14 * edge_id + 8] > 0
 
     @staticmethod
     def is_more_than_two_opposite_direction(obs, edge_id):
-        return obs[9 + 14 * edge_id + 9] > 0
+        return obs[7 + 14 * edge_id + 9] > 0
 
     @staticmethod
     def has_deadlock(obs, edge_id):
-        return obs[9 + 14 * edge_id + 13] > 0
+        return obs[7 + 14 * edge_id + 13] > 0
 
 
 def _is_near_next_decision(node):

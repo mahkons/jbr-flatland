@@ -5,6 +5,8 @@ import torch.nn.functional as F
 from networks.Attention import MultiHeadAttention
 from networks.Recursive import RecursiveLayer
 
+from env.observations.SimpleObservation import ObservationDecoder
+
 def create_linear_layers(in_sz, out_sz, layers_sz):
     layers = list()
     for sz in layers_sz:
@@ -49,8 +51,12 @@ class ActorNet(nn.Module):
         self.fc_thought = nn.Linear(THOUGHT_SZ, INTENTION_SZ + self.neighbours_depth)
         self.signal_attention = MultiHeadAttention(state_sz=INTENTION_SZ + self.neighbours_depth, n_head=N_HEAD)
         self.signal_seq = nn.Sequential(nn.Linear(THOUGHT_SZ, INTENTION_SZ, bias=False), nn.ReLU(inplace=True))
-        self.action_seq = nn.Sequential(nn.Linear(THOUGHT_SZ + (INTENTION_SZ + self.neighbours_depth) * N_HEAD, 256),
-                nn.ReLU(inplace=True), nn.Linear(256, action_sz))
+
+        assert action_sz == 3
+        self.first_head = nn.Sequential(nn.Linear(THOUGHT_SZ + (INTENTION_SZ + self.neighbours_depth) * N_HEAD, 256),
+                nn.ReLU(inplace=True), nn.Linear(256, 3))
+        self.second_head = nn.Sequential(nn.Linear(THOUGHT_SZ + (INTENTION_SZ + self.neighbours_depth) * N_HEAD, 256),
+                nn.ReLU(inplace=True), nn.Linear(256, 2))
 
     def think(self, state):
         return self.think_seq(state)
@@ -60,13 +66,26 @@ class ActorNet(nn.Module):
 
     # thought_shape = (batch_size, THOUGHT_SZ)
     # signals_shape = (batch_size, AGENT_NUMBER, INTENTION_SZ)
-    def act(self, thought, signals):
+    def act(self, states, thought, signals):
         query = self.fc_thought(thought).unsqueeze(1)
         key = _add_direction(signals, self.neighbours_depth)
         attended_signals = self.signal_attention(query=query, key=key, value=key).squeeze(1)
 
         input = torch.cat([thought, attended_signals], dim=1)
-        return self.action_seq(input)
+
+        mask = torch.tensor([ObservationDecoder.is_real(obs, 1) for obs in states], dtype=torch.bool)
+        
+        # extremely ugly code yeah
+        first_log = self.first_head(input[mask])
+        second_log = self.second_head(input[~mask])
+
+        bsz = states.shape[0]
+        second_log = torch.cat([-torch.ones((bsz - mask.sum(), 1)) * 1e6, second_log], dim=1)
+
+        actions = torch.empty((bsz, 3))
+        actions[mask] = first_log
+        actions[~mask] = second_log
+        return actions
 
 
 class CriticNet(nn.Module):

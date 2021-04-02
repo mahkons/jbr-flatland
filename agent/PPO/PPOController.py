@@ -28,7 +28,7 @@ class PPOController():
         if torch.any(valid_neighbours):
             neighbours_thoughts[valid_neighbours] = self.actor_net.think(neighbours_states[valid_neighbours].view(-1, self.state_sz))
         neighbours_signals = self.actor_net.intent(neighbours_thoughts)
-        logits = self.actor_net.act(thoughts, neighbours_signals)
+        logits = self.actor_net.act(states, thoughts, neighbours_signals)
         return logits
 
 
