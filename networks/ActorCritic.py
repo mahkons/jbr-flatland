@@ -73,16 +73,16 @@ class ActorNet(nn.Module):
 
         input = torch.cat([thought, attended_signals], dim=1)
 
-        mask = torch.tensor([ObservationDecoder.is_real(obs, 1) for obs in states], dtype=torch.bool)
+        mask = torch.tensor([ObservationDecoder.is_real(obs, 1) for obs in states], dtype=torch.bool, device=thought.device)
         
         # extremely ugly code yeah
         first_log = self.first_head(input[mask])
         second_log = self.second_head(input[~mask])
 
         bsz = states.shape[0]
-        second_log = torch.cat([-torch.ones((bsz - mask.sum(), 1), device=second_log.device) * 1e6, second_log], dim=1)
+        second_log = torch.cat([-torch.ones((bsz - mask.sum(), 1), device=thought.device) * 1e6, second_log], dim=1)
 
-        actions = torch.empty((bsz, 3))
+        actions = torch.empty((bsz, 3), device=thought.device)
         actions[mask] = first_log
         actions[~mask] = second_log
         return actions
