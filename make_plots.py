@@ -11,6 +11,7 @@ import torch
 import numpy as np
 import pandas as pd
 import json
+import itertools
 
 
 def add_trace(plot, x, y, name, color=None):
@@ -51,7 +52,7 @@ def add_reward_trace(plot, plot_data, use_steps=True, avg_epochs=1, name="reward
     if use_steps:
         x = np.array(steps)
     else:
-        x = np.array(train_episodes)
+        x = np.array(range(1, len(train_episodes) + 1))
     add_avg_trace(plot, x, y, name=name, avg_epochs=avg_epochs)
 
 
@@ -80,6 +81,22 @@ def add_rewards(plot, logpath, use_steps=True, avg_constant=20, transform=lambda
     paths = get_paths(os.path.join(dirpath, "plots"), name)
     if not paths:
         paths = get_paths(os.path.join(dirpath, "plots"))
+
+    if env == -2:
+        for path in paths:
+            data = load_csv(os.path.join(logpath, "plots", path))
+            for env in itertools.count():
+                mask = (data[:, 3] == env)
+                datam = data[:, 0:3][mask]
+                if len(datam) == 0:
+                    break
+                if name == "time":
+                    datam[:, 2] -= datam[0][2]
+                datam[:, 2] = transform(datam[:, 2])
+                add_reward_trace(plot, datam, use_steps=use_steps, avg_epochs=avg_constant,
+                        name=logpath[len("logdir"):])# + path[:-len(".csv")]) # ugly yeah
+        return plot
+
 
     for path in paths:
         data = load_csv(os.path.join(logpath, "plots", path))
