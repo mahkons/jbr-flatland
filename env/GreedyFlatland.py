@@ -4,7 +4,7 @@ from collections import defaultdict
 from env.Flatland import get_new_position, DelegatedAttribute
 from flatland.envs.agent_utils import RailAgentStatus
 
-_gamma = 0.995 # TODO pass it somehow
+_gamma = 0.999 # TODO pass it somehow
 
 class GreedyFlatland():
     def __init__(self, env):

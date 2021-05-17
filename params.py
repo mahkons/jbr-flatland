@@ -16,7 +16,7 @@ def PPOParams():
         rollouts_sample = 8,
         gae_horizon = 128,
         epochs_update = 3,
-        gamma = 0.995,
+        gamma = 0.999,
         lam = 0.95,
         clip_eps = 0.2,
         value_loss_coeff = 0.5,
